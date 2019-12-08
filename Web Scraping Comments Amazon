@@ -1,0 +1,71 @@
+var getHTML = function ( url, callback ) {
+	if ( !window.XMLHttpRequest ) return;
+	var xhr = new XMLHttpRequest();
+
+	xhr.onload = function() {
+		if ( callback && typeof( callback ) === 'function' ) {
+			callback( this.responseXML );
+		}
+	}
+	xhr.open( 'GET', url );
+	xhr.responseType = 'document';
+	xhr.send();
+
+};
+var allReviews = [];
+var allStars = [];
+
+onFinish = function (content) { 
+	var reviews = content.getElementsByClassName("review-text-content");
+	var stars = content.getElementsByClassName("review-rating");
+	var starsArray = Array.prototype.slice.call( stars );
+	var reviewsArray = Array.prototype.slice.call( reviews );
+	toArray(reviewsArray,starsArray);
+	
+
+};
+
+const escapeCORS = 'https://cors-anywhere.herokuapp.com/';
+const amazonLink1 = 'https://www.amazon.com/Beats-Wireless-Cancelling-Over-Ear-Headphones/product-reviews/B075G4YHDD/ref=cm_cr_arp_d_paging_btm_next_';
+const amazonLink2 = '?ie=UTF8&reviewerType=all_reviews&pageNumber=';
+
+for(i=1; i<=150; i++) {
+	getHTML(escapeCORS + amazonLink1 + i.toString() + amazonLink2 + i.toString(), onFinish);
+}
+
+setTimeout(function() { 
+	toTXT(csvContent + starsArray + reviewsArray);
+	console.log(starsArray);
+}, 60000);
+
+let csvContent = "data:text/csv;charset=utf-8,";
+let reviewsArray = "";
+let starsArray = "";
+
+function toCSV(reviews, stars) {
+    reviews.forEach(rowArray => {
+        data = rowArray.join(',');
+        reviewsArray += rowArray.toString() + "\r\n";
+    });
+    stars.forEach(rowArray => {
+        data = rowArray.join(',');
+        starsArray += data + "\r\n";
+    });
+}
+
+function toTXT(csvContent) {
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "my_data.txt");
+    document.body.appendChild(link);
+    link.click();
+}
+
+function toArray (reviews, stars) {
+    var revs = reviews.map(x => [x.textContent]);
+    var star = stars.map(x => [x.textContent]);
+    toCSV(revs, star);
+    allReviews.push(revs);
+    allStars.push(star);
+}
